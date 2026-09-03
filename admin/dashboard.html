@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yönetici Paneli | Randevu Yönetimi</title>
+
+  <!-- CSS Dosyaları -->
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Header Area (Görsel 2 Birebir) -->
+    <header class="app-header">
+      <div class="top-bar">
+        <button type="button" class="icon-btn" aria-label="Menü">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        
+        <div class="brand-logo-wrapper">
+          <img src="../assets/img/logo.svg" alt="İşletme Logo" class="brand-logo">
+        </div>
+
+        <div class="badge-logged-in" id="btn-logout" title="Çıkış Yapmak İçin Tıklayın" style="cursor: pointer;">
+          <span>Giriş Yapıldı</span>
+          <div class="badge-avatar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-titles">
+        <h1 class="header-title business-name">Örnek İşletme</h1>
+        <p class="header-subtitle" id="admin-panel-subtitle">Yönetici Paneli | Randevu Yönetimi</p>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+
+      <!-- ================= SEKME 1: GENEL GÖRÜNÜM ================= -->
+      <div id="tab-admin-overview" class="admin-tab-content">
+        <!-- Stat Kartları (Grid 2x2) -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span>Bugünkü Randevular</span>
+              <div class="stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="overview-today-count">0 Randevu</div>
+            <div class="stat-desc">Toplam randevu kaydı</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span>Doluluk Oranı</span>
+              <div class="stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="overview-occupancy-rate">%0</div>
+            <div class="stat-desc">Müsait saat dilimlerine göre</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span>Tahmini Ciro</span>
+              <div class="stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="overview-revenue">0 TL</div>
+            <div class="stat-desc">Bugünkü tahmini kazanç</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span>Çalışma Durumu</span>
+              <div class="stat-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" style="font-size: 1rem; color: var(--primary-color);">Açık (09:00-18:30)</div>
+            <div class="stat-desc">Aktif mesai saatleri</div>
+          </div>
+        </div>
+
+        <!-- Hızlı Randevu Akışı -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Bugünkü Yaklaşan Randevular
+          </div>
+          <div id="overview-upcoming-list">
+            <!-- JS ile doldurulacak -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SEKME 2: RANDEVU YÖNETİMİ (Görsel 2) ================= -->
+      <div id="tab-admin-management" class="admin-tab-content active">
+        <!-- Toolbar: Date Selection & Legend (Görsel 2) -->
+        <div class="admin-toolbar">
+          <div class="admin-date-picker">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" id="admin-date-select">
+          </div>
+
+          <div class="admin-legend">
+            <div class="legend-item">
+              <span class="legend-dot available"></span> Randevulu
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot booked"></span> Manuel/Kapalı
+            </div>
+          </div>
+        </div>
+
+        <!-- Slot & Appointment Table (Görsel 2 Birebir Tablo Yapısı) -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Tarih & Saat</th>
+                <th>Müşteri Adı</th>
+                <th>Telefon</th>
+                <th>Hizmet</th>
+                <th style="text-align: right;">Durum</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <!-- JS Tarafından Yüklenecek -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= SEKME 3: İSTATİSTİKLER ================= -->
+      <div id="tab-admin-stats" class="admin-tab-content">
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Popüler Hizmetler Dağılımı
+          </div>
+          <div class="progress-list" id="stats-services-list">
+            <!-- JS ile Dinamik Doldurulacak -->
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Kazanç Özet İstatistikleri
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+              <span style="color: var(--text-muted);">Günlük Ortalama Randevu</span>
+              <strong id="stat-daily-avg">7 Randevu</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+              <span style="color: var(--text-muted);">En Çok Tercih Edilen Saat</span>
+              <strong id="stat-peak-hour">14:00 - 16:00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="color: var(--text-muted);">Müşteri Memnuniyet Oranı</span>
+              <strong style="color: var(--primary-color);">%98.5</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SEKME 4: YÖNETİM AYARLARI ================= -->
+      <div id="tab-admin-settings" class="admin-tab-content">
+        
+        <!-- İşletme Bilgileri -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            İşletme İletişim & Konum Ayarları
+          </div>
+
+          <form id="settings-business-form">
+            <div class="input-group" style="margin-bottom: 10px;">
+              <div class="input-content">
+                <label class="input-label">İşletme Adı</label>
+                <input type="text" id="setting-biz-name" class="input-field">
+              </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 10px;">
+              <div class="input-content">
+                <label class="input-label">Telefon Numarası</label>
+                <input type="text" id="setting-biz-phone" class="input-field">
+              </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 10px;">
+              <div class="input-content">
+                <label class="input-label">Adres Bilgisi</label>
+                <input type="text" id="setting-biz-address" class="input-field">
+              </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 14px;">
+              <div class="input-content">
+                <label class="input-label">Google Haritalar Konum Linki</label>
+                <input type="text" id="setting-biz-map" class="input-field">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="padding: 10px;">Ayarları Kaydet</button>
+          </form>
+        </div>
+
+        <!-- Yönetici Şifresi Güncelleme -->
+        <div class="settings-card">
+          <div class="settings-card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Yönetici Giriş Şifresi
+          </div>
+
+          <form id="settings-password-form">
+            <div class="input-group" style="margin-bottom: 14px;">
+              <div class="input-content">
+                <label class="input-label">Yeni Şifre</label>
+                <input type="password" id="setting-new-password" class="input-field" placeholder="••••••••" required>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 10px;">Şifreyi Güncelle</button>
+          </form>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Alt Navigasyon Barı (Görsel 2 Birebir) -->
+    <nav class="bottom-nav">
+      <button type="button" class="nav-item" data-tab="tab-admin-overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span>Genel Görünüm</span>
+      </button>
+      <button type="button" class="nav-item active" data-tab="tab-admin-management">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Randevu Yönetimi</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-admin-stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>İstatistikler</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-admin-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Yönetim Ayarları</span>
+      </a>
+    </nav>
+
+    <!-- Manuel Müşteri Ekleme Modal -->
+    <div id="manual-modal" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">Manuel Randevu Ekle (<span id="modal-slot-time">10:30</span>)</h3>
+          <button type="button" id="modal-close" class="modal-close">&times;</button>
+        </div>
+        <form id="manual-form">
+          <div class="input-group" style="margin-bottom: 12px;">
+            <div class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="input-content">
+              <label for="manual-name" class="input-label">Müşteri Ad Soyad</label>
+              <input type="text" id="manual-name" class="input-field" placeholder="Ahmet Yılmaz" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <div class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="input-content">
+              <label for="manual-phone" class="input-label">Telefon Numarası</label>
+              <input type="tel" id="manual-phone" class="input-field" placeholder="05xx xxx xx xx" required>
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 20px;">
+            <div class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            </div>
+            <div class="input-content">
+              <label for="manual-service" class="input-label">Hizmet Seçimi</label>
+              <select id="manual-service" class="input-select">
+                <option value="">Hizmet seçiniz</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">
+            Kaydet ve Saati Kapat
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Supabase & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/db.js"></script>
+  <script src="../assets/js/admin.js"></script>
+</body>
+</html>
