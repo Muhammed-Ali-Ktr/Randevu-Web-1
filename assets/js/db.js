@@ -1,7 +1,6 @@
 /**
  * Randevu Sistemi - Veritabanı Mantığı (assets/js/db.js)
- * Supabase JS SDK istemci bağlantısı ve CRUD fonksiyonları.
- * Supabase yapılandırması girildiğinde Supabase kullanır ve eski demo hafızasını temizler.
+ * Supabase JS SDK istemci bağlantısı, CRUD fonksiyonları, ayar yönetimi ve dayanıklı (resilient) fallback.
  */
 
 class DatabaseService {
@@ -13,7 +12,7 @@ class DatabaseService {
   }
 
   /**
-   * Supabase Bağlantısını Başlat ve Eski Demo Çerezlerini Temizle
+   * Supabase Bağlantısını Başlat
    */
   init() {
     const config = window.APP_CONFIG ? window.APP_CONFIG.supabase : null;
@@ -23,9 +22,6 @@ class DatabaseService {
         this.supabase = supabase.createClient(config.url, config.anonKey);
         this.useLocalStorage = false;
         console.log("Supabase veritabanı bağlantısı başarıyla kuruldu.");
-        
-        // Supabase canlı moda geçildiğinde tarayıcı yerel hafızasındaki eski demo verileri temizle
-        this.clearLegacyLocalStorage();
       } catch (err) {
         console.warn("Supabase bağlantı hatası, LocalStorage moduna geçiliyor:", err);
         this.useLocalStorage = true;
@@ -37,7 +33,7 @@ class DatabaseService {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (event) => {
-        if (event.key === 'randevu_db_signal') {
+        if (event.key === 'randevu_db_signal' || event.key === 'randevu_business_settings') {
           this.notifySubscribers();
         }
       });
@@ -45,18 +41,93 @@ class DatabaseService {
   }
 
   /**
-   * Tarayıcı hafızasındaki tüm eski randevu verilerini temizler
+   * İşletme Ayarlarını Getir (Supabase -> LocalStorage -> APP_CONFIG)
    */
-  clearLegacyLocalStorage() {
-    if (typeof localStorage === 'undefined') return;
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('randevu_data_')) {
-        keysToRemove.push(key);
+  async getSettings() {
+    // 1. Önce yerelde kayıtlı ayarları al (varsa)
+    let settings = null;
+    try {
+      const localStr = localStorage.getItem('randevu_business_settings');
+      if (localStr) {
+        settings = JSON.parse(localStr);
+      }
+    } catch (e) {
+      console.warn("Yerel ayar okuma hatası:", e);
+    }
+
+    // 2. Supabase bağlıysa veritabanındaki settings tablosunu sorgula
+    if (!this.useLocalStorage && this.supabase) {
+      try {
+        const { data, error } = await this.supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'business')
+          .maybeSingle();
+
+        if (!error && data && data.value) {
+          settings = { ...(settings || {}), ...data.value };
+          localStorage.setItem('randevu_business_settings', JSON.stringify(settings));
+        }
+      } catch (err) {
+        // Tablo henüz Supabase'de oluşturulmamışsa konsolu kirletmeden yerel ayarlarla devam et
+        console.warn("Supabase settings okunamadı, yerel ayar kullanılıyor:", err.message || err);
       }
     }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+
+    // 3. Hiçbir yerde yoksa config.js içindeki varsayılanları döndür
+    const defaults = (window.APP_CONFIG && window.APP_CONFIG.business) ? window.APP_CONFIG.business : {};
+    const finalSettings = { ...defaults, ...(settings || {}) };
+
+    // Bellekteki APP_CONFIG'i de eşitle
+    if (window.APP_CONFIG && window.APP_CONFIG.business) {
+      Object.assign(window.APP_CONFIG.business, finalSettings);
+    }
+
+    return finalSettings;
+  }
+
+  /**
+   * İşletme Ayarlarını Kaydet (LocalStorage + Supabase + Realtime Signal)
+   */
+  async saveSettings(settingsData) {
+    if (!settingsData) return { success: false, error: "Ayar verisi boş olamaz." };
+
+    // Mevcut ayarlar ile birleştir
+    const currentSettings = await this.getSettings();
+    const updated = { ...currentSettings, ...settingsData };
+
+    // 1. Yerel hafızaya kaydet
+    try {
+      localStorage.setItem('randevu_business_settings', JSON.stringify(updated));
+    } catch (e) {
+      console.error("LocalStorage ayar kayıt hatası:", e);
+    }
+
+    // 2. Bellekteki APP_CONFIG'i güncelle
+    if (window.APP_CONFIG && window.APP_CONFIG.business) {
+      Object.assign(window.APP_CONFIG.business, updated);
+    }
+
+    // 3. Supabase'e kaydetmeyi dene (Tablo varsa upsert yapar)
+    if (!this.useLocalStorage && this.supabase) {
+      try {
+        const { error } = await this.supabase
+          .from('settings')
+          .upsert({ key: 'business', value: updated, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+        if (error) {
+          console.warn("Supabase settings tablosuna yazılamadı (tablo oluşturulmamış olabilir):", error.message);
+        }
+      } catch (err) {
+        console.warn("Supabase saveSettings hatası:", err);
+      }
+    }
+
+    // 4. Tüm sekmeleri ve dinleyicileri uyar
+    this.broadcastLocalChange();
+    this.notifySubscribers();
+
+    return { success: true, data: updated };
   }
 
   /**
@@ -72,17 +143,18 @@ class DatabaseService {
           .select('*')
           .eq('date', dateStr);
 
-        if (appErr) {
-          console.error("Supabase appointments çekme hatası:", appErr);
-        }
-
         const { data: blockedSlots, error: blockErr } = await this.supabase
           .from('blocked_slots')
           .select('*')
           .eq('date', dateStr);
 
-        if (blockErr) {
-          console.error("Supabase blocked_slots çekme hatası:", blockErr);
+        if (appErr || blockErr) {
+          console.warn("Supabase randevu çekme uyarısı, yerel depolama verisiyle birleştiriliyor:", appErr || blockErr);
+          const localData = this.getAppointmentsByDateLocal(dateStr);
+          return {
+            appointments: (appointments && appointments.length) ? appointments : localData.appointments,
+            blockedSlots: (blockedSlots && blockedSlots.length) ? blockedSlots.map(s => s.time) : localData.blockedSlots
+          };
         }
 
         return {
@@ -90,12 +162,15 @@ class DatabaseService {
           blockedSlots: (blockedSlots || []).map(s => s.time)
         };
       } catch (err) {
-        console.error("Supabase veri çekme hatası:", err);
-        return { appointments: [], blockedSlots: [] };
+        console.error("Supabase veri çekme hatası, yerel depolamaya geçiliyor:", err);
+        return this.getAppointmentsByDateLocal(dateStr);
       }
     }
 
-    // LocalStorage modu: Herhangi bir demo veri olmadan tamamen boş başlar
+    return this.getAppointmentsByDateLocal(dateStr);
+  }
+
+  getAppointmentsByDateLocal(dateStr) {
     const storageKey = `randevu_data_${dateStr}`;
     const rawData = localStorage.getItem(storageKey);
     if (!rawData) {
@@ -103,17 +178,21 @@ class DatabaseService {
       localStorage.setItem(storageKey, JSON.stringify(emptyData));
       return emptyData;
     }
-    return JSON.parse(rawData);
+    try {
+      return JSON.parse(rawData);
+    } catch (e) {
+      return { appointments: [], blockedSlots: [] };
+    }
   }
 
   /**
    * Telefon numarasına göre müşterinin geçmiş ve gelecek randevularını getirir.
-   * @param {string} phoneStr
    */
   async getAppointmentsByPhone(phoneStr) {
     const cleanPhone = phoneStr.replace(/\s+/g, '');
     if (!cleanPhone) return [];
 
+    let supabaseResults = [];
     if (!this.useLocalStorage && this.supabase) {
       try {
         const { data, error } = await this.supabase
@@ -122,16 +201,16 @@ class DatabaseService {
           .ilike('phone', `%${cleanPhone}%`)
           .order('date', { ascending: false });
 
-        if (error) throw error;
-        return data || [];
+        if (!error && data) {
+          supabaseResults = data;
+        }
       } catch (err) {
-        console.error("Supabase telefon ile randevu arama hatası:", err);
-        return [];
+        console.warn("Supabase telefon ile randevu arama uyarısı:", err);
       }
     }
 
-    // LocalStorage modu
-    const results = [];
+    // Yerel depolamadaki randevuları da tara ve birleştir
+    const localResults = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('randevu_data_')) {
@@ -140,15 +219,23 @@ class DatabaseService {
           if (data && data.appointments) {
             data.appointments.forEach(app => {
               if (app.phone && app.phone.replace(/\s+/g, '').includes(cleanPhone)) {
-                results.push(app);
+                localResults.push(app);
               }
             });
           }
         } catch (e) {}
       }
     }
-    
-    return results.sort((a, b) => {
+
+    // Tekilleştirme (aynı tarih + saat)
+    const combined = [...supabaseResults];
+    localResults.forEach(l => {
+      if (!combined.some(c => c.date === l.date && c.time === l.time)) {
+        combined.push(l);
+      }
+    });
+
+    return combined.sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time}`);
       const dateB = new Date(`${b.date}T${b.time}`);
       return dateB - dateA;
@@ -157,7 +244,6 @@ class DatabaseService {
 
   /**
    * Müşteri randevusu oluşturur.
-   * @param {Object} data - { date, time, customer_name, phone, service_name, service_id }
    */
   async createAppointment(data) {
     const appointmentData = {
@@ -177,18 +263,25 @@ class DatabaseService {
           .insert([appointmentData])
           .select();
 
-        if (error) throw error;
+        if (error) {
+          console.warn("Supabase randevu kaydetme hatası (yerel depolamaya yedekleniyor):", error.message);
+          return this.createAppointmentLocal(data, appointmentData);
+        }
+
         this.notifySubscribers();
         return { success: true, data: res };
       } catch (err) {
-        console.error("Supabase randevu kaydı oluşturma hatası:", err);
-        return { success: false, error: err.message };
+        console.warn("Supabase createAppointment catch (yerel depolamaya yedekleniyor):", err);
+        return this.createAppointmentLocal(data, appointmentData);
       }
     }
 
-    // LocalStorage modu
+    return this.createAppointmentLocal(data, appointmentData);
+  }
+
+  createAppointmentLocal(data, appointmentData) {
     const storageKey = `randevu_data_${data.date}`;
-    const current = await this.getAppointmentsByDate(data.date);
+    const current = this.getAppointmentsByDateLocal(data.date);
     
     const isBooked = current.appointments.some(a => a.time === data.time);
     const isBlocked = current.blockedSlots.includes(data.time);
@@ -199,7 +292,6 @@ class DatabaseService {
 
     current.appointments.push(appointmentData);
     localStorage.setItem(storageKey, JSON.stringify(current));
-    
     localStorage.setItem('randevu_last_phone', data.phone);
 
     this.broadcastLocalChange();
@@ -216,7 +308,7 @@ class DatabaseService {
       try {
         if (isBlocked) {
           if (manualCustomer) {
-            await this.supabase.from('appointments').insert([{
+            const { error: insErr } = await this.supabase.from('appointments').insert([{
               date,
               time,
               customer_name: manualCustomer.customer_name,
@@ -224,25 +316,33 @@ class DatabaseService {
               service_name: manualCustomer.service_name,
               created_at: new Date().toISOString()
             }]);
+            if (insErr) throw insErr;
           } else {
-            await this.supabase.from('blocked_slots').upsert([{ date, time }]);
+            const { error: blockErr } = await this.supabase.from('blocked_slots').upsert([{ date, time }]);
+            if (blockErr) throw blockErr;
           }
         } else {
           await this.supabase.from('appointments').delete().match({ date, time });
           await this.supabase.from('blocked_slots').delete().match({ date, time });
         }
 
+        // Yerel önbelleği de senkronize et
+        this.toggleSlotStatusLocal(date, time, isBlocked, manualCustomer);
+
         this.notifySubscribers();
         return { success: true };
       } catch (err) {
-        console.error("Supabase toggle slot hatası:", err);
-        return { success: false, error: err.message };
+        console.warn("Supabase toggle slot hatası, yerel depolamaya uygulanıyor:", err.message);
+        return this.toggleSlotStatusLocal(date, time, isBlocked, manualCustomer);
       }
     }
 
-    // LocalStorage modu
+    return this.toggleSlotStatusLocal(date, time, isBlocked, manualCustomer);
+  }
+
+  toggleSlotStatusLocal(date, time, isBlocked, manualCustomer = null) {
     const storageKey = `randevu_data_${date}`;
-    const current = await this.getAppointmentsByDate(date);
+    const current = this.getAppointmentsByDateLocal(date);
 
     if (isBlocked) {
       if (manualCustomer) {
@@ -273,29 +373,38 @@ class DatabaseService {
   }
 
   /**
-   * Supabase Realtime veya Yerel Değişiklik Aboneliği
+   * Realtime veya Yerel Değişiklik Aboneliği
    */
   subscribeToChanges(callback) {
     this.subscribers.push(callback);
 
     if (!this.useLocalStorage && this.supabase) {
-      const channel = this.supabase
-        .channel('randevu-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'appointments' },
-          () => callback()
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'blocked_slots' },
-          () => callback()
-        )
-        .subscribe();
+      try {
+        const channel = this.supabase
+          .channel('randevu-changes')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'appointments' },
+            () => callback()
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'blocked_slots' },
+            () => callback()
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'settings' },
+            () => callback()
+          )
+          .subscribe();
 
-      return () => {
-        this.supabase.removeChannel(channel);
-      };
+        return () => {
+          this.supabase.removeChannel(channel);
+        };
+      } catch (e) {
+        console.warn("Supabase Realtime abonelik hatası:", e);
+      }
     }
 
     return () => {

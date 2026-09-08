@@ -49,7 +49,7 @@ Projenizi canlı Supabase veritabanına bağlamak için aşağıdaki 4 basit ad�
 
 ```sql
 -- 1. Randevular Tablosu (appointments)
-CREATE TABLE public.appointments (
+CREATE TABLE IF NOT EXISTS public.appointments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     date DATE NOT NULL,
     time VARCHAR(10) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE public.appointments (
 );
 
 -- 2. Bloklanan / Kapalı Saatler Tablosu (blocked_slots)
-CREATE TABLE public.blocked_slots (
+CREATE TABLE IF NOT EXISTS public.blocked_slots (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     date DATE NOT NULL,
     time VARCHAR(10) NOT NULL,
@@ -69,9 +69,17 @@ CREATE TABLE public.blocked_slots (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. Güvenlik İzinleri (Row Level Security - RLS)
+-- 3. İşletme ve Sistem Ayarları Tablosu (settings)
+CREATE TABLE IF NOT EXISTS public.settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 4. Güvenlik İzinleri (Row Level Security - RLS)
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocked_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public Appointments Select" ON public.appointments FOR SELECT USING (true);
 CREATE POLICY "Public Appointments Insert" ON public.appointments FOR INSERT WITH CHECK (true);
@@ -82,9 +90,15 @@ CREATE POLICY "Public Blocked Slots Insert" ON public.blocked_slots FOR INSERT W
 CREATE POLICY "Public Blocked Slots Update" ON public.blocked_slots FOR UPDATE USING (true);
 CREATE POLICY "Public Blocked Slots Delete" ON public.blocked_slots FOR DELETE USING (true);
 
--- 4. Canlı Senkronizasyon (Supabase Realtime Yayın Özelliği)
+CREATE POLICY "Public Settings Select" ON public.settings FOR SELECT USING (true);
+CREATE POLICY "Public Settings Insert" ON public.settings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Settings Update" ON public.settings FOR UPDATE USING (true);
+CREATE POLICY "Public Settings Delete" ON public.settings FOR DELETE USING (true);
+
+-- 5. Canlı Senkronizasyon (Supabase Realtime Yayın Özelliği)
 ALTER PUBLICATION supabase_realtime ADD TABLE public.appointments;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.blocked_slots;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.settings;
 ```
 
 ---

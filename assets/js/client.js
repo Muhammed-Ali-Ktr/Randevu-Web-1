@@ -43,35 +43,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initApp();
 
-  function initApp() {
-    // İşletme Bilgilerini Doldur ve Header Linklerini Bağla
-    if (window.APP_CONFIG && window.APP_CONFIG.business) {
-      const b = window.APP_CONFIG.business;
-      const soc = window.APP_CONFIG.social;
-
-      // Header Başlıkları
-      document.querySelectorAll(".business-name").forEach(el => el.textContent = b.name);
-      document.querySelectorAll(".business-subtitle").forEach(el => el.textContent = b.subtitle);
-
-      // Header Sol İkon (Konum) & Sağ İkon (Telefon)
-      if (btnHeaderLocation) btnHeaderLocation.href = b.locationUrl || "#";
-      if (btnHeaderPhone) btnHeaderPhone.href = `tel:${b.phone}`;
-
-      // Hakkımızda Sekmesi Bilgileri
-      if (aboutImgElement && b.aboutImage) aboutImgElement.src = b.aboutImage;
-      if (aboutTitleElement && b.aboutTitle) aboutTitleElement.textContent = b.aboutTitle;
-      if (aboutTextElement && b.aboutText) aboutTextElement.textContent = b.aboutText;
-
-      // İletişim Sekmesi Bilgileri
-      if (contactLocationLink) contactLocationLink.href = b.locationUrl || "#";
-      if (contactAddressText) contactAddressText.textContent = b.address || b.name;
-      if (contactPhoneLink) contactPhoneLink.href = `tel:${b.phone}`;
-      if (contactPhoneText) contactPhoneText.textContent = b.phoneDisplay || b.phone;
-
-      if (socialInstagram && soc) socialInstagram.href = soc.instagram || "#";
-      if (socialWhatsapp && soc) socialWhatsapp.href = soc.whatsapp || "#";
-      if (socialWebsite && soc) socialWebsite.href = soc.website || "#";
+  async function applyBusinessSettings() {
+    let b = window.APP_CONFIG ? window.APP_CONFIG.business : {};
+    if (window.dbService) {
+      b = await window.dbService.getSettings();
     }
+    const soc = window.APP_CONFIG ? window.APP_CONFIG.social : {};
+
+    // Header Başlıkları ve Sayfa Başlığı
+    if (b.name) {
+      document.querySelectorAll(".business-name").forEach(el => el.textContent = b.name);
+      document.title = `Randevu Al | ${b.name}`;
+    }
+    if (b.subtitle) {
+      document.querySelectorAll(".business-subtitle").forEach(el => el.textContent = b.subtitle);
+    }
+
+    // Header Sol İkon (Konum) & Sağ İkon (Telefon)
+    if (btnHeaderLocation) btnHeaderLocation.href = b.locationUrl || "#";
+    if (btnHeaderPhone) btnHeaderPhone.href = `tel:${b.phone}`;
+
+    // Hakkımızda Sekmesi Bilgileri
+    if (aboutImgElement && b.aboutImage) aboutImgElement.src = b.aboutImage;
+    if (aboutTitleElement && b.aboutTitle) aboutTitleElement.textContent = b.aboutTitle;
+    if (aboutTextElement && b.aboutText) aboutTextElement.textContent = b.aboutText;
+
+    // İletişim Sekmesi Bilgileri
+    if (contactLocationLink) contactLocationLink.href = b.locationUrl || "#";
+    if (contactAddressText) contactAddressText.textContent = b.address || b.name || "";
+    if (contactPhoneLink) contactPhoneLink.href = `tel:${b.phone}`;
+    if (contactPhoneText) contactPhoneText.textContent = b.phoneDisplay || b.phone || "";
+
+    if (socialInstagram && soc) socialInstagram.href = soc.instagram || "#";
+    if (socialWhatsapp && soc) socialWhatsapp.href = soc.whatsapp || "#";
+    if (socialWebsite && soc) socialWebsite.href = soc.website || "#";
+  }
+
+  async function initApp() {
+    // İşletme Bilgilerini Doldur
+    await applyBusinessSettings();
 
     // Hizmet Seçimi Dropdown Doldur
     populateServices();
@@ -93,12 +103,19 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchMyAppointments(lastPhone);
     }
 
-    // Supabase Realtime Değişiklik Dinleyicisi
+    // Supabase Realtime ve Yerel Değişiklik Dinleyicisi
     if (window.dbService) {
       window.dbService.subscribeToChanges(() => {
         loadSlotsForDate(selectedDate);
+        applyBusinessSettings();
       });
     }
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'randevu_business_settings' || event.key === 'randevu_db_signal') {
+        applyBusinessSettings();
+      }
+    });
 
     // Etkinlik Dinleyicileri
     setupEventListeners();

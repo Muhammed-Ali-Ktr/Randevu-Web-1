@@ -6,26 +6,26 @@
 const APP_CONFIG = {
   // İşletme Bilgileri
   business: {
-    name: "Örnek İşletme",
+    name: "Kuaför Vadık",
     subtitle: "Randevunuzu kolayca alın",
     adminSubtitle: "Yönetici Paneli | Randevu Yönetimi",
-    phone: "05551234567", // Düz telefon formatı (tel: linki için)
-    phoneDisplay: "0555 123 45 67",
+    phone: "05425823459", // Düz telefon formatı (tel: linki için)
+    phoneDisplay: "0542 582 34 59",
     category: "Güzellik & Kişisel Bakım",
     logo: "assets/img/logo.svg",
-    locationUrl: "https://maps.google.com/?q=Atat%C3%BCrk+Cad.+No:123+Kad%C3%Bck%C3%B6y+%C4%B0stanbul",
-    address: "Atatürk Cad. No:123, Kadıköy / İstanbul",
+    locationUrl: "https://www.google.com/maps/place/KUAF%C3%96R+VADIK/@37.890026,32.5048061,661m/data=!3m2!1e3!4b1!4m6!3m5!1s0x14d0856976c5fdf9:0x2e6a1bff03b283b0!8m2!3d37.890026!4d32.507381!16s%2Fg%2F11h6mqkb6_?entry=ttu&g_ep=EgoyMDI2MDkwMi4wIKXMDSoASAFQAw%3D%3D",
+    address: "Araplar, Büyük Sinan Cd. No:8, 42050 Karatay/Konya",
     aboutImage: "assets/img/about.jpg",
     aboutTitle: "İşletmemiz Hakkında",
-    aboutText: "2015 yılından bu yana modern ekibimiz ve hijyenik salon ortamımızla kişisel bakım ve güzellik alanında en üst kalite hizmet sunuyoruz. Müşteri memnuniyetini ön planda tutan anlayışımızla, size özel randevu saatlerinizde kesintisiz ve konforlu bir deneyim sağlıyoruz."
+    aboutText: "Temiz ortam, titiz işçilik ve güler yüzlü hizmet. Aradığınız kaliteli bakımı bütçenize uygun fiyatlarla sunuyoruz. Randevunuzu hemen oluşturun!"
   },
 
   // Sosyal Medya İletişim Bilgileri
   social: {
     instagram: "https://instagram.com/ornekisletme",
     instagramHandle: "@ornekisletme",
-    whatsapp: "https://wa.me/905551234567",
-    whatsappDisplay: "+90 555 123 45 67",
+    whatsapp: "https://wa.me/905425823459",
+    whatsappDisplay: "+90 542 582 34 59",
     website: "https://www.ornekisletme.com",
     websiteDisplay: "www.ornekisletme.com"
   },
@@ -33,7 +33,7 @@ const APP_CONFIG = {
   // Çalışma Saatleri ve Randevu Dilimleri
   workingHours: {
     start: "09:00",      // Başlangıç Saati
-    end: "18:30",        // Bitiş Saati
+    end: "20:30",        // Bitiş Saati
     intervalMinutes: 30  // Randevu Aralığı (dakika)
   },
 
@@ -48,8 +48,8 @@ const APP_CONFIG = {
 
   // Supabase Veritabanı ve API Ayarları
   supabase: {
-    url: "https://cuwvhycguikkerunwlew.supabase.co",
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1d3ZoeWNndWlra2VydW53bGV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDI2ODcsImV4cCI6MjEwNDAxODY4N30.qSsqvCbgMUhfqzHEG7vKiZ0Db_0suJRJ_ZzXXx95jsw"
+    url: "https://vqjwkmnzucladrgobgvm.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxandrbW56dWNsYWRyZ29iZ3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTQ3MTYsImV4cCI6MjEwNDQ3MDcxNn0.8y2qo1xaPhAy-saAYaEpKFgdGjUtrC5Nx-rtWULK9Zg"
   },
 
   // Yönetici Giriş Şifresi

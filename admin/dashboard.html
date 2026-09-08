@@ -33,7 +33,7 @@
       </div>
 
       <div class="header-titles">
-        <h1 class="header-title business-name">Örnek İşletme</h1>
+        <h1 class="header-title business-name">Kuaför Vadık</h1>
         <p class="header-subtitle" id="admin-panel-subtitle">Yönetici Paneli | Randevu Yönetimi</p>
       </div>
     </header>
@@ -67,16 +67,6 @@
             <div class="stat-desc">Müsait saat dilimlerine göre</div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-header">
-              <span>Tahmini Ciro</span>
-              <div class="stat-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-            </div>
-            <div class="stat-value" id="overview-revenue">0 TL</div>
-            <div class="stat-desc">Bugünkü tahmini kazanç</div>
-          </div>
 
           <div class="stat-card">
             <div class="stat-header">
@@ -85,7 +75,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
             </div>
-            <div class="stat-value" style="font-size: 1rem; color: var(--primary-color);">Açık (09:00-18:30)</div>
+            <div class="stat-value" style="font-size: 1rem; color: var(--primary-color);">Açık (09:00-20:30)</div>
             <div class="stat-desc">Aktif mesai saatleri</div>
           </div>
         </div>
@@ -159,16 +149,16 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem;">
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
-              <span style="color: var(--text-muted);">Günlük Ortalama Randevu</span>
-              <strong id="stat-daily-avg">7 Randevu</strong>
+              <span style="color: var(--text-muted);">Bugünkü Randevu Sayısı</span>
+              <strong id="stat-daily-avg">0 Randevu</strong>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
               <span style="color: var(--text-muted);">En Çok Tercih Edilen Saat</span>
-              <strong id="stat-peak-hour">14:00 - 16:00</strong>
+              <strong id="stat-peak-hour">-</strong>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0;">
               <span style="color: var(--text-muted);">Müşteri Memnuniyet Oranı</span>
-              <strong style="color: var(--primary-color);">%98.5</strong>
+              <strong id="stat-satisfaction" style="color: var(--primary-color);">%100</strong>
             </div>
           </div>
         </div>
@@ -256,7 +246,7 @@
       <button type="button" class="nav-item" data-tab="tab-admin-settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span>Yönetim Ayarları</span>
-      </a>
+      </button>
     </nav>
 
     <!-- Manuel Müşteri Ekleme Modal -->

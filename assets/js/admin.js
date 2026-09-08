@@ -173,6 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
       window.dbService.subscribeToChanges(() => {
         renderAdminDashboard(selectedDate);
         loadOverviewTab();
+        loadStatsTab();
+        updateAdminBusinessInfo();
       });
     }
 
@@ -306,24 +308,50 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6. İstatistikler Sekmesi Yükleyici
     async function loadStatsTab() {
       const statsServicesList = document.getElementById("stats-services-list");
+      const statDailyAvg = document.getElementById("stat-daily-avg");
+      const statPeakHour = document.getElementById("stat-peak-hour");
+      const statSatisfaction = document.getElementById("stat-satisfaction");
+
       if (!statsServicesList) return;
 
-      const services = window.APP_CONFIG.services;
+      const services = window.APP_CONFIG.services || [];
       const todayStr = new Date().toISOString().split("T")[0];
       const data = await window.dbService.getAppointmentsByDate(todayStr);
 
+      const appointments = data.appointments || [];
+      const totalCount = appointments.length;
+
       const serviceCounts = {};
+      const timeCounts = {};
       services.forEach(s => serviceCounts[s.name] = 0);
-      data.appointments.forEach(a => {
+
+      appointments.forEach(a => {
         if (a.service_name && serviceCounts[a.service_name] !== undefined) {
           serviceCounts[a.service_name]++;
         }
+        if (a.time) {
+          timeCounts[a.time] = (timeCounts[a.time] || 0) + 1;
+        }
       });
 
+      // En popüler saat dilimi hesaplama
+      let peakHour = "-";
+      let maxTimeCount = 0;
+      Object.entries(timeCounts).forEach(([t, count]) => {
+        if (count > maxTimeCount) {
+          maxTimeCount = count;
+          peakHour = t;
+        }
+      });
+
+      if (statDailyAvg) statDailyAvg.textContent = `${totalCount} Randevu`;
+      if (statPeakHour) statPeakHour.textContent = peakHour;
+      if (statSatisfaction) statSatisfaction.textContent = totalCount > 0 ? "%100" : "-";
+
       statsServicesList.innerHTML = '';
-      services.forEach((s, idx) => {
-        const count = serviceCounts[s.name] || (idx === 0 ? 12 : idx === 1 ? 8 : 4);
-        const percent = Math.min(100, count * 7);
+      services.forEach(s => {
+        const count = serviceCounts[s.name] || 0;
+        const percent = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
 
         const item = document.createElement("div");
         item.className = "progress-item";
@@ -340,8 +368,21 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // İşletme adını ve başlıkları güncelle
+    async function updateAdminBusinessInfo() {
+      if (window.dbService) {
+        const settings = await window.dbService.getSettings();
+        if (settings && settings.name) {
+          document.querySelectorAll(".business-name").forEach(el => el.textContent = settings.name);
+        }
+      }
+    }
+    updateAdminBusinessInfo();
+
     // 7. Yönetim Ayarları Yükleyici
-    function loadSettingsTab() {
+    let settingsListenersAttached = false;
+
+    async function loadSettingsTab() {
       const bizName = document.getElementById("setting-biz-name");
       const bizPhone = document.getElementById("setting-biz-phone");
       const bizAddr = document.getElementById("setting-biz-address");
@@ -351,24 +392,53 @@ document.addEventListener("DOMContentLoaded", () => {
       const passForm = document.getElementById("settings-password-form");
       const newPass = document.getElementById("setting-new-password");
 
-      if (window.APP_CONFIG && window.APP_CONFIG.business) {
-        const b = window.APP_CONFIG.business;
-        if (bizName) bizName.value = b.name;
-        if (bizPhone) bizPhone.value = b.phoneDisplay || b.phone;
+      let b = window.APP_CONFIG ? window.APP_CONFIG.business : null;
+      if (window.dbService) {
+        b = await window.dbService.getSettings();
+      }
+
+      if (b) {
+        if (bizName) bizName.value = b.name || "";
+        if (bizPhone) bizPhone.value = b.phoneDisplay || b.phone || "";
         if (bizAddr) bizAddr.value = b.address || "";
         if (bizMap) bizMap.value = b.locationUrl || "";
       }
 
+      if (settingsListenersAttached) return;
+      settingsListenersAttached = true;
+
       if (bizForm) {
-        bizForm.addEventListener("submit", (e) => {
+        bizForm.addEventListener("submit", async (e) => {
           e.preventDefault();
-          if (window.APP_CONFIG && window.APP_CONFIG.business) {
-            window.APP_CONFIG.business.name = bizName.value.trim();
-            window.APP_CONFIG.business.phoneDisplay = bizPhone.value.trim();
-            window.APP_CONFIG.business.address = bizAddr.value.trim();
-            window.APP_CONFIG.business.locationUrl = bizMap.value.trim();
-            alert("İşletme ayarları başarıyla güncellendi.");
+          const submitBtn = bizForm.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Kaydediliyor...";
           }
+
+          const rawPhone = bizPhone ? bizPhone.value.trim() : "";
+          const newSettings = {
+            name: bizName ? bizName.value.trim() : "",
+            phoneDisplay: rawPhone,
+            phone: rawPhone.replace(/\s+/g, ''),
+            address: bizAddr ? bizAddr.value.trim() : "",
+            locationUrl: bizMap ? bizMap.value.trim() : ""
+          };
+
+          if (window.dbService) {
+            await window.dbService.saveSettings(newSettings);
+          } else if (window.APP_CONFIG && window.APP_CONFIG.business) {
+            Object.assign(window.APP_CONFIG.business, newSettings);
+          }
+
+          document.querySelectorAll(".business-name").forEach(el => el.textContent = newSettings.name);
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Ayarları Kaydet";
+          }
+
+          alert("İşletme ayarları başarıyla kaydedildi!");
         });
       }
 
